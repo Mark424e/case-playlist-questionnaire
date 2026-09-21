@@ -14,45 +14,62 @@ import {
   Trash2,
   SkipForward,
   User,
+  Clock,
+  Disc,
 } from 'lucide-react';
 
+const PLATFORMS = ['Spotify', 'YouTube'];
+
+const SONG_COUNT_OPTIONS = [
+  { count: '20 sange', time: '~30 minutter' },
+  { count: '50 sange', time: '~1 time' },
+  { count: '100+ sange', time: '~2 timer' },
+];
+
 const SITUATIONER = [
-  'Fitness 💪',
-  'Studie 🤓',
-  'Afslapning 😴',
-  'Fest & Sammenkomst 🕺',
-  'Roadtrip & Kørsel 🚗',
   'Gaming 🎮',
+  'Fitness 💪',
+  'Studying 📚',
+  'Afslapning 😴',
+  'Sammenkomst 🤲',
+  'Kørsel 🚗',
+  'Madlavning 🍳',
+  'Arbejde 👷',
+  'Rengøring 🧹',
 ];
 
 const GENRER = [
   'Pop',
-  'EDM',
-  'Hip Hop',
-  'R&B',
-  'Singer-songwriter',
-  'Alt Rock',
-  'Hyperpop',
   'Indiepop',
-  'Folk Pop',
+  'Hyperpop',
+  'K-Pop',
+  'Electronic / EDM',
   'Bass House',
   'Dance House',
   'Drum & Bass',
+  'Hip Hop / Rap',
   'Trap',
+  'R&B / Soul',
   'Lofi',
-  'Phonk',
+  'Rock',
+  'Indie / Alt Rock',
+  'Post-Punk',
 ];
 
 export default function InteractiveQuiz() {
   const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState(1);
 
+  // Form State
   const [userName, setUserName] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState('');
   const [selectedSituation, setSelectedSituation] = useState('');
   const [customSituation, setCustomSituation] = useState('');
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [customGenre, setCustomGenre] = useState('');
+  const [songCount, setSongCount] = useState('');
   
+  // Song Inputs (Max 3)
   const [songs, setSongs] = useState([{ title: '', artist: '' }]);
 
   const [loading, setLoading] = useState(false);
@@ -87,7 +104,7 @@ export default function InteractiveQuiz() {
   };
 
   const nextStep = () => {
-    if (currentStep < 4) {
+    if (currentStep < 6) {
       setDirection(1);
       setCurrentStep((prev) => prev + 1);
     }
@@ -115,10 +132,14 @@ export default function InteractiveQuiz() {
       allGenres.push(customGenre.trim());
     }
 
+    const selectedOption = SONG_COUNT_OPTIONS.find((opt) => opt.count === songCount);
+
     const playlistData = {
       'Navn': userName,
+      'Platform': selectedPlatform,
       'Valgt Situation': finalSituation,
       'Foretrukne Genrer': allGenres.length > 0 ? allGenres.join(', ') : 'Ingen specificeret',
+      'Minimum Sange': songCount ? `${songCount} (Est. tid: ${selectedOption?.time})` : 'Ingen angivet',
       'Inspirationssange': validSongs.length > 0 ? validSongs.join(' | ') : 'Ingen angivet (Sprunget over)',
     };
 
@@ -135,7 +156,7 @@ export default function InteractiveQuiz() {
         setStatus('error');
       }
     } catch (err) {
-      console.error('Anmodning fejlede:', err);
+      console.error('Anmodning mislykkedes:', err);
       setStatus('error');
     } finally {
       setLoading(false);
@@ -146,10 +167,12 @@ export default function InteractiveQuiz() {
     setCurrentStep(0);
     setDirection(-1);
     setUserName('');
+    setSelectedPlatform('');
     setSelectedSituation('');
     setCustomSituation('');
     setSelectedGenres([]);
     setCustomGenre('');
+    setSongCount('');
     setSongs([{ title: '', artist: '' }]);
     setStatus(null);
   };
@@ -171,23 +194,25 @@ export default function InteractiveQuiz() {
 
   const canGoNext = () => {
     if (currentStep === 0) return userName.trim().length > 0;
-    if (currentStep === 1) return selectedSituation !== '' || customSituation.trim() !== '';
-    if (currentStep === 2) return selectedGenres.length > 0 || customGenre.trim() !== '';
-    if (currentStep === 3) return true;
-    if (currentStep === 4) return true;
+    if (currentStep === 1) return selectedPlatform !== '';
+    if (currentStep === 2) return selectedSituation !== '' || customSituation.trim() !== '';
+    if (currentStep === 3) return selectedGenres.length > 0 || customGenre.trim() !== '';
+    if (currentStep === 4) return songCount !== '';
+    if (currentStep === 5) return true; // Valgfrit trin
+    if (currentStep === 6) return true;
     return false;
   };
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl text-slate-100 overflow-hidden">
-
+      {/* Header med Progress Bar */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Music className="w-6 h-6 text-emerald-400" />
           <h2 className="text-xl font-bold text-white">Skræddersy Din Playlist</h2>
         </div>
         {status !== 'success' && (
-          <span className="text-xs text-slate-400 font-medium">Trin {currentStep + 1} af 5</span>
+          <span className="text-xs text-slate-400 font-medium">Trin {currentStep + 1} af 7</span>
         )}
       </div>
 
@@ -195,8 +220,8 @@ export default function InteractiveQuiz() {
         <div className="w-full bg-slate-800 h-1.5 rounded-full mb-6 overflow-hidden">
           <motion.div
             className="bg-emerald-500 h-full"
-            initial={{ width: '20%' }}
-            animate={{ width: `${((currentStep + 1) / 5) * 100}%` }}
+            initial={{ width: '14%' }}
+            animate={{ width: `${((currentStep + 1) / 7) * 100}%` }}
             transition={{ duration: 0.3 }}
           />
         </div>
@@ -209,9 +234,9 @@ export default function InteractiveQuiz() {
           className="text-center py-8 space-y-4"
         >
           <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto" />
-          <h3 className="text-xl font-bold text-white">Tak, {userName}!</h3>
+          <h3 className="text-xl font-bold text-white">Mange tak, {userName}!</h3>
           <p className="text-slate-300">
-            Dine playlist-ønsker er blevet leveret direkte til min Discord DM.
+            Dine playlist-ønsker er blevet sendt direkte til min Discord DM. 😊
           </p>
           <button
             onClick={handleReset}
@@ -222,8 +247,9 @@ export default function InteractiveQuiz() {
         </motion.div>
       ) : (
         <div>
-          <div className="relative min-h-[340px]">
+          <div className="relative min-h-85">
             <AnimatePresence custom={direction} mode="wait">
+              {/* SLIDE 1: NAVN */}
               {currentStep === 0 && (
                 <motion.div
                   key="step1"
@@ -236,7 +262,7 @@ export default function InteractiveQuiz() {
                   className="space-y-4"
                 >
                   <label className="block text-base font-semibold text-slate-200">
-                    1. Hvem er du?
+                    1. Who u is? 🤔
                   </label>
                   <p className="text-xs text-slate-400">
                     Indtast dit navn, så jeg ved, hvem playlisten skal laves til.
@@ -254,6 +280,7 @@ export default function InteractiveQuiz() {
                 </motion.div>
               )}
 
+              {/* SLIDE 2: PLATFORM */}
               {currentStep === 1 && (
                 <motion.div
                   key="step2"
@@ -266,7 +293,45 @@ export default function InteractiveQuiz() {
                   className="space-y-4"
                 >
                   <label className="block text-base font-semibold text-slate-200">
-                    2. Hvad er anledningen?
+                    2. Bruger du Spotify eller YouTube Music? 🎶
+                  </label>
+                  <p className="text-xs text-slate-400">Vælg din foretrukne tjeneste:</p>
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    {PLATFORMS.map((platform) => (
+                      <motion.button
+                        key={platform}
+                        type="button"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setSelectedPlatform(platform)}
+                        className={`p-6 text-center rounded-xl border flex flex-col items-center justify-center gap-3 transition-all ${
+                          selectedPlatform === platform
+                            ? 'bg-emerald-600/20 border-emerald-500 text-emerald-200 font-bold shadow-lg shadow-emerald-600/10'
+                            : 'bg-slate-800/40 border-slate-700/60 text-slate-300 hover:bg-slate-800'
+                        }`}
+                      >
+                        <Disc className="w-8 h-8 text-emerald-400" />
+                        <span className="text-base">{platform}</span>
+                      </motion.button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* SLIDE 3: SITUATION */}
+              {currentStep === 2 && (
+                <motion.div
+                  key="step3"
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="space-y-4"
+                >
+                  <label className="block text-base font-semibold text-slate-200">
+                    3. Hvad skal playlisten bruges til? 🤔
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                     {SITUATIONER.map((sit) => (
@@ -292,7 +357,7 @@ export default function InteractiveQuiz() {
 
                   <div className="pt-2 border-t border-slate-800">
                     <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                      Eller skriv din egen:
+                      Eller skriv et specifikt scenarie:
                     </label>
                     <input
                       type="text"
@@ -301,16 +366,17 @@ export default function InteractiveQuiz() {
                         setCustomSituation(e.target.value);
                         setSelectedSituation('');
                       }}
-                      placeholder="F.eks. Madlavning, Bryllup..."
+                      placeholder="F.eks. Når jeg er sent oppe kl. lort om natten type shi-..."
                       className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
                     />
                   </div>
                 </motion.div>
               )}
 
-              {currentStep === 2 && (
+              {/* SLIDE 4: GENRER */}
+              {currentStep === 3 && (
                 <motion.div
-                  key="step3"
+                  key="step4"
                   custom={direction}
                   variants={slideVariants}
                   initial="enter"
@@ -321,14 +387,14 @@ export default function InteractiveQuiz() {
                 >
                   <div className="flex justify-between items-center">
                     <label className="block text-base font-semibold text-slate-200">
-                      3. Vælg genrer:
+                      4. Vælg genre:
                     </label>
                     <span className="text-xs text-slate-400">
                       Valgt: {selectedGenres.length + (customGenre.trim() ? 1 : 0)}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[170px] overflow-y-auto pr-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-42.5 overflow-y-auto pr-1">
                     {GENRER.map((genre) => {
                       const isSelected = selectedGenres.includes(genre);
                       return (
@@ -350,22 +416,75 @@ export default function InteractiveQuiz() {
 
                   <div className="pt-2 border-t border-slate-800">
                     <label className="block text-xs font-medium text-slate-400 mb-1.5">
-                      Eller beskriv lyden:
+                      Eller tilføj din egen genre (Du må også beskrive genren, hvis du ikke kender navnet)
                     </label>
                     <input
                       type="text"
                       value={customGenre}
                       onChange={(e) => setCustomGenre(e.target.value)}
-                      placeholder="F.eks. Phonk, Darkwave, Math Rock..."
+                      placeholder="F.eks. Phonk, Liquid DnB, EDM Musik der har en nostalgisk lyd til sig..."
                       className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
                     />
                   </div>
                 </motion.div>
               )}
 
-              {currentStep === 3 && (
+              {/* SLIDE 5: ANTAL SANGE & ESTIMERET TID */}
+              {currentStep === 4 && (
                 <motion.div
-                  key="step4"
+                  key="step5"
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="space-y-4"
+                >
+                  <label className="block text-base font-semibold text-slate-200">
+                    5. Hvor mange sange skal playlisten minimum indeholde? 🤔
+                  </label>
+                  <p className="text-xs text-slate-400">
+                    Vælg det ønskede antal sange. Vær obs på at det tager længere tid, hvis du vælger flere sange.
+                  </p>
+
+                  <div className="grid grid-cols-3 gap-3 pt-2">
+                    {SONG_COUNT_OPTIONS.map((option) => (
+                      <motion.button
+                        key={option.count}
+                        type="button"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setSongCount(option.count)}
+                        className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
+                          songCount === option.count
+                            ? 'bg-emerald-600/30 border-emerald-500 text-emerald-200 font-bold shadow-lg shadow-emerald-600/10'
+                            : 'bg-slate-800/40 border-slate-700/60 text-slate-300 hover:bg-slate-800'
+                        }`}
+                      >
+                        <span className="text-lg font-bold">
+                          {option.count}
+                          {option.count === '100+ sange' && '*'}
+                        </span>
+                        <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-emerald-400" /> {option.time}
+                        </span>
+                      </motion.button>
+                    ))}
+                  </div>
+
+                  {songCount === '100+ sange' && (
+                    <p className="text-[11px] text-amber-400/90 italic pt-2">
+                      * Hvis du vælger 100+ sange, skylder du mig VBucks eller VP. 😇 (PS. issa joke).
+                    </p>
+                  )}
+                </motion.div>
+              )}
+
+              {/* SLIDE 6: VALGFRIE SANGE OG ARTISTER */}
+              {currentStep === 5 && (
+                <motion.div
+                  key="step6"
                   custom={direction}
                   variants={slideVariants}
                   initial="enter"
@@ -376,12 +495,12 @@ export default function InteractiveQuiz() {
                 >
                   <div className="flex justify-between items-center">
                     <label className="block text-base font-semibold text-slate-200">
-                      4. Tilføj inspirationssange (Valgfrit)
+                      6. Tilføj inspirationssange (Valgfrit)
                     </label>
                     <span className="text-xs text-emerald-400 font-medium">Maks 3 sange</span>
                   </div>
                   <p className="text-xs text-slate-400">
-                    Har du nogle specifikke sange, du vil have playlisten skal læne sig op ad?
+                    Har du nogle specifikke sange eller artister, du vil have playlisten skal læne sig op ad?
                   </p>
 
                   <div className="space-y-3">
@@ -428,9 +547,10 @@ export default function InteractiveQuiz() {
                 </motion.div>
               )}
 
-              {currentStep === 4 && (
+              {/* SLIDE 7: OPSUMMERING & SEND */}
+              {currentStep === 6 && (
                 <motion.div
-                  key="step5"
+                  key="step7"
                   custom={direction}
                   variants={slideVariants}
                   initial="enter"
@@ -440,7 +560,7 @@ export default function InteractiveQuiz() {
                   className="space-y-4"
                 >
                   <label className="block text-base font-semibold text-slate-200">
-                    5. Klar?
+                    7. Er du klar til at sende?
                   </label>
                   <p className="text-xs text-slate-400">
                     Her er en opsummering af dine indtastede ønsker:
@@ -451,12 +571,19 @@ export default function InteractiveQuiz() {
                       <span className="text-slate-400 font-semibold">Navn:</span> {userName}
                     </div>
                     <div>
+                      <span className="text-slate-400 font-semibold">Platform:</span> {selectedPlatform}
+                    </div>
+                    <div>
                       <span className="text-slate-400 font-semibold">Situation:</span>{' '}
                       {customSituation.trim() !== '' ? customSituation : selectedSituation}
                     </div>
                     <div>
                       <span className="text-slate-400 font-semibold">Genrer:</span>{' '}
                       {[...selectedGenres, customGenre.trim()].filter(Boolean).join(', ')}
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-semibold">Sange & Est. Tid:</span> {songCount} (
+                      {SONG_COUNT_OPTIONS.find((opt) => opt.count === songCount)?.time})
                     </div>
                     <div>
                       <span className="text-slate-400 font-semibold">Inspirationssange:</span>{' '}
@@ -479,6 +606,7 @@ export default function InteractiveQuiz() {
             </div>
           )}
 
+          {/* Navigation Controls */}
           <div className="flex justify-between items-center mt-8 pt-4 border-t border-slate-800">
             <button
               type="button"
@@ -489,7 +617,7 @@ export default function InteractiveQuiz() {
               <ArrowLeft className="w-4 h-4" /> Tilbage
             </button>
 
-            {currentStep === 3 && (
+            {currentStep === 5 && (
               <button
                 type="button"
                 onClick={nextStep}
@@ -499,7 +627,7 @@ export default function InteractiveQuiz() {
               </button>
             )}
 
-            {currentStep < 4 ? (
+            {currentStep < 6 ? (
               <button
                 type="button"
                 onClick={nextStep}

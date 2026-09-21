@@ -14,6 +14,7 @@ export async function POST(request) {
       );
     }
 
+    // Opret eller hent DM-kanal til din bruger-ID
     const dmChannelRes = await fetch('https://discord.com/api/v10/users/@me/channels', {
       method: 'POST',
       headers: {
@@ -34,12 +35,20 @@ export async function POST(request) {
     const dmChannel = await dmChannelRes.json();
 
     const name = selections['Navn'] || 'En bruger';
+    const platform = selections['Platform'] || 'en streamingtjeneste';
     const situation = selections['Valgt Situation'] || 'en vilkårlig situation';
     const genres = selections['Foretrukne Genrer'] || 'forskellige genrer';
+    const minSongs = selections['Minimum Sange'] || 'ikke angivet';
     const songs = selections['Inspirationssange'];
 
-    let messageText = `**${name}** har anmodet om en ny playliste!\n\n`;
+    // Opbyg naturlig dansk besked
+    let messageText = `**${name}** har anmodet om en ny playliste på **${platform}**!\n\n`;
     messageText += `Playlisten skal bruges til **${situation.toLowerCase()}**, og stemningen skal primært læne sig op ad **${genres}**.\n\n`;
+    messageText += `⏱️ **Ønsket længde & forventet tid:** ${minSongs}\n\n`;
+
+    if (minSongs.includes('100+ sange')) {
+      messageText += `⚠️ *Bemærk: ${name} valgte 100+ sange og skylder dig derfor noget i fremtiden!* 😉\n\n`;
+    }
 
     if (songs && songs !== 'Ingen angivet (Sprunget over)') {
       messageText += `Som inspiration til tonen og stilen har ${name} fremhævet følgende sange:\n> 🎵 ${songs.split(' | ').join('\n> 🎵 ')}`;
@@ -52,7 +61,7 @@ export async function POST(request) {
         {
           title: `🎧 Ny playliste-anmodning fra ${name}`,
           description: messageText,
-          color: 3066993,
+          color: 3066993, // Mørkegrøn/emerald farvekode
           footer: { text: 'Music Playlist Generator • Next.js + Discord Bot' },
           timestamp: new Date().toISOString(),
         },
